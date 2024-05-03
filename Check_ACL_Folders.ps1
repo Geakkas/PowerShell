@@ -20,7 +20,8 @@ IF ((Test-Path ($pathToSaveCSV)) -OR !(Test-Path (Split-Path $pathToSaveCSV))) {
 $Error.Clear()
 
 # Выгружаем все подпапки:
-$subfolders = Get-ChildItem $pathRootDir -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object PSPath, FullName
+# $subfolders = Get-ChildItem $pathRootDir -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object PSPath, FullName
+Get-ChildItem $pathRootDir -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object PSPath, FullName | Tee-Object -Variable subfolders
 
 # Делаем какой-никакой счётчик обрабатываемых объектов для подсчёта процесса выполнения скрипта:
 $subfoldersCount = $subfolders.Count
