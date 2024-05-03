@@ -40,7 +40,7 @@ foreach ($folder in $subfolders) {
 		@{N = "Access_Contains_Uninherited"; E = { IF ($false -in ($_.Access.IsInherited)) {"+"} Else {"-"}}}, `
 		Owner, `
 		@{N = "Disabled_Inheritance"; E = {$_.AreAccessRulesProtected}}, `
-		@{N = "No_Access_To_Folder"; E = { IF ((Convert-Path $_.Path) -in $Error.TargetObject) {"+"} Else {"-"} }} `
+		@{N = "No_Access_To_Folder"; E = { IF (($_.Path.replace("Microsoft.PowerShell.Core\FileSystem::","")) -in $Error.TargetObject) {"+"} Else {"-"} }} `
 		| Export-CSV $pathToSaveCSV -Encoding UTF8 -Delimiter ';' -NoTypeInformation -Append
 	}
 	Catch
