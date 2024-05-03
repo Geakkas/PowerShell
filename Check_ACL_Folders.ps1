@@ -33,7 +33,7 @@ foreach ($folder in $subfolders) {
 	
 	Try {
 		$folder | Get-ACL -ErrorAction SilentlyContinue | Select-Object `
-		@{N = "Path"; E = {Convert-Path $_.Path}}, `
+		@{N = "Path"; E = {$_.Path.replace("Microsoft.PowerShell.Core\FileSystem::","")}}, `
 		@{N = "Access_Users"; E = {$_.Access.IdentityReference -join '; '}}, `
 		@{N = "Access_Type"; E = {$_.Access.AccessControlType -join '; '}}, `
 		@{N = "Access_Rights"; E = {$_.Access.FileSystemRights -join '; '}}, `
