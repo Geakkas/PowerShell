@@ -1,10 +1,10 @@
 # Задаём исходные данные в переменные:
-#$pathRootDir = "C:\Data" # Указываем корневую папку для проверки
+#$pathRootDir = "\\?\C:\Data" # Указываем корневую папку для проверки (в формате LiteralPath)
 #$pathToSaveCSV = "C:\Reports\CheckFoldersACL.csv" # Расположение сохраняемого файла CSV
 
-$pathRootDir = $(Write-Host "Введите путь к проверяемой папке (For Example: C:\Data): " -ForegroundColor Yellow; Read-Host)
+$pathRootDir = $(Write-Host "Введите путь к проверяемой папке в формате LiteralPath (For Example: \\?\C:\Data): " -ForegroundColor Yellow; Read-Host)
 # Проверка папки на существование:
-IF (!(Test-Path $pathRootDir)) {
+IF (!(Test-Path -LiteralPath $pathRootDir)) {
 	Write-Host "Folder is not exists" -ForegroundColor Red
 	Break
 }
@@ -20,8 +20,8 @@ IF ((Test-Path ($pathToSaveCSV)) -OR !(Test-Path (Split-Path $pathToSaveCSV))) {
 $Error.Clear()
 
 # Выгружаем все подпапки:
-# $subfolders = Get-ChildItem $pathRootDir -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object PSPath, FullName
-Get-ChildItem $pathRootDir -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object PSPath, FullName | Tee-Object -Variable subfolders
+# $subfolders = Get-ChildItem -LiteralPath $pathRootDir -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object PSPath, FullName
+Get-ChildItem -LiteralPath $pathRootDir -Directory -Recurse -Force -ErrorAction SilentlyContinue | Select-Object PSPath, FullName | Tee-Object -Variable subfolders
 
 # Делаем какой-никакой счётчик обрабатываемых объектов для подсчёта процесса выполнения скрипта:
 $subfoldersCount = $subfolders.Count
@@ -33,20 +33,20 @@ foreach ($folder in $subfolders) {
 	
 	Try {
 		$folder | Get-ACL -ErrorAction SilentlyContinue | Select-Object `
-		@{N = "Path"; E = {$_.Path.replace("Microsoft.PowerShell.Core\FileSystem::","")}}, `
+		@{N = "Path"; E = {$_.Path.replace("Microsoft.PowerShell.Core\FileSystem::\\?\","")}}, `
 		@{N = "Access_Users"; E = {$_.Access.IdentityReference -join '; '}}, `
 		@{N = "Access_Type"; E = {$_.Access.AccessControlType -join '; '}}, `
 		@{N = "Access_Rights"; E = {$_.Access.FileSystemRights -join '; '}}, `
 		@{N = "Access_Contains_Uninherited"; E = { IF ($false -in ($_.Access.IsInherited)) {"+"} Else {"-"}}}, `
 		Owner, `
 		@{N = "Disabled_Inheritance"; E = {$_.AreAccessRulesProtected}}, `
-		@{N = "No_Access_To_Folder"; E = { IF (($_.Path.replace("Microsoft.PowerShell.Core\FileSystem::","")) -in $Error.TargetObject) {"+"} Else {"-"} }} `
+		@{N = "No_Access_To_Folder"; E = { IF (($_.Path.replace("Microsoft.PowerShell.Core\FileSystem::\\?\","")) -in $Error.TargetObject) {"+"} Else {"-"} }} `
 		| Export-CSV $pathToSaveCSV -Encoding UTF8 -Delimiter ';' -NoTypeInformation -Append
 	}
 	Catch
 	{
 		$folder | Select-Object `
-		@{N = "Path"; E = {$_.FullName}}, `
+		@{N = "Path"; E = {$_.FullName -replace "\\\\\?\\"}}, `
 		@{N = "Access_Users"; E = {"Unknown"}}, `
 		@{N = "Access_Type"; E = {"Unknown"}}, `
 		@{N = "Access_Rights"; E = {"Unknown"}}, `
